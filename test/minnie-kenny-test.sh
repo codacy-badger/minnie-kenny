@@ -20,7 +20,12 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
       pushd git-secrets
       git checkout "${minnie_kenny_git_secrets_commit}"
       case "${TRAVIS_OS_NAME}" in
-        windows) cat install.ps1 | powershell -File - -InstallationDirectory "${HOME}/bin" ;;
+        windows)
+          # Workaround powershell execution policies by reading from stdin
+          cat install.ps1 | powershell -File -
+          # Don't know enough powershell to have the previous line install to ${HOME}/bin
+          export PATH="${PATH}:${HOME}/.gitsecrets"
+          ;;
         *) make DESTDIR="${HOME}" PREFIX="" install ;;
       esac
       popd
