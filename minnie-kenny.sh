@@ -6,7 +6,7 @@ set -eu # -o pipefail isn't supported by POSIX
 minnie_kenny_command_name=${0##*/}
 minnie_kenny_quiet=0
 minnie_kenny_strict=0
-minnie_kenny_inc="minnie-kenny.inc"
+minnie_kenny_gitconfig="minnie-kenny.gitconfig"
 
 usage() {
   cat <<USAGE >&2
@@ -14,7 +14,7 @@ Usage:
     ${minnie_kenny_command_name}
     -s | --strict               Require git-secrets to be setup or fail
     -q | --quiet                Don't output any status messages
-    -i | --include=FILE         Path to the include for git-config (default: "minnie-kenny.inc")
+    -i | --include=FILE         Path to the include for git-config (default: "minnie-kenny.gitconfig")
 USAGE
   exit 1
 }
@@ -35,12 +35,12 @@ while [ $# -gt 0 ]; do
       ;;
     -i)
       shift 1
-      minnie_kenny_inc="${1:-}"
-      if [ "${minnie_kenny_inc}" = "" ]; then break; fi
+      minnie_kenny_gitconfig="${1:-}"
+      if [ "${minnie_kenny_gitconfig}" = "" ]; then break; fi
       shift 1
       ;;
     --include=*)
-      minnie_kenny_inc="${1#*=}"
+      minnie_kenny_gitconfig="${1#*=}"
       shift 1
       ;;
     --help)
@@ -53,7 +53,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-if [ "${minnie_kenny_inc}" = "" ]; then
+if [ "${minnie_kenny_gitconfig}" = "" ]; then
   echo_err "Error: you need to provide an include file."
   usage
 fi
@@ -81,8 +81,8 @@ if [ "${minnie_kenny_is_work_tree}" != "true" ]; then
 fi
 
 minnie_kenny_git_dir="$(git rev-parse --absolute-git-dir)"
-if [ ! -f "${minnie_kenny_git_dir}/../${minnie_kenny_inc}" ]; then
-  echo_err "Error: ${minnie_kenny_inc} was not found next to the directory ${minnie_kenny_git_dir}"
+if [ ! -f "${minnie_kenny_git_dir}/../${minnie_kenny_gitconfig}" ]; then
+  echo_err "Error: ${minnie_kenny_gitconfig} was not found next to the directory ${minnie_kenny_git_dir}"
   exit 1
 fi
 
@@ -120,8 +120,8 @@ check_and_install_hooks() {
     exit 1
   fi
 
-  if ! git config --get include.path | grep -q "^../${minnie_kenny_inc}\$"; then
-    git config --add include.path "../${minnie_kenny_inc}"
+  if ! git config --get include.path | grep -q "^../${minnie_kenny_gitconfig}\$"; then
+    git config --add include.path "../${minnie_kenny_gitconfig}"
   fi
 }
 

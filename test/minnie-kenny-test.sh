@@ -51,7 +51,7 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
       --rm \
       --volume "${PWD}/minnie-kenny.sh:/usr/local/bin/minnie-kenny.sh" \
       alpine \
-      sh -c "set -xue && apk --update add git && mkdir -p /src && cd /src && touch minnie-kenny.inc && minnie-kenny.sh"
+      sh -c "set -x && apk --update add git && mkdir /src && cd /src && touch minnie-kenny.gitconfig && minnie-kenny.sh"
     ;;
   coverage)
     # Ensure all lines of minnie-kenny are covered

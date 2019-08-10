@@ -20,7 +20,7 @@ Usage:
     minnie-kenny.sh
     -s | --strict               Require git-secrets to be setup or fail
     -q | --quiet                Don't output any status messages
-    -i | --include=FILE         Path to the include for git-config (default: \"minnie-kenny.inc\")"
+    -i | --include=FILE         Path to the include for git-config (default: \"minnie-kenny.gitconfig\")"
 
 # The minnie kenny usage message with a leading newline.
 minnie_kenny_usage=$'\n'"${minnie_kenny_usage_trimmed}"
@@ -29,11 +29,11 @@ minnie_kenny_usage=$'\n'"${minnie_kenny_usage_trimmed}"
 setup() {
   mkdir -p "${minnie_kenny_test_dir}"
   pushd "${minnie_kenny_test_dir}" || exit 1
-  rm -rf .git  minnie-kenny.inc
+  rm -rf .git minnie-kenny.gitconfig
   git init >/dev/null 2>&1
   git config user.email "minnie-kenny-test@example.com"
   git config user.name "minnie-kenny-test"
-  touch minnie-kenny.inc
+  touch minnie-kenny.gitconfig
   popd || exit 1
   export GIT_DIR="${minnie_kenny_test_dir}/.git"
 }
@@ -96,11 +96,27 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
   [ "${output}" = "${expected}" ]
 }
 
-@test "running without a minnie-kenny.inc fails" {
-  rm "${minnie_kenny_test_dir}/minnie-kenny.inc"
+@test "running with an include in a sub directory succeeds" {
+  rm "${minnie_kenny_test_dir}/minnie-kenny.gitconfig"
+  mkdir -p "${minnie_kenny_test_dir}/subdir"
+  touch "${minnie_kenny_test_dir}/subdir/minnie-kenny.gitconfig"
+  run_test -i "subdir/minnie-kenny.gitconfig"
+  [ "${status}" -eq 0 ]
+}
+
+@test "running with an absolute path to an include in a sub directory succeeds" {
+  rm "${minnie_kenny_test_dir}/minnie-kenny.gitconfig"
+  mkdir -p "${minnie_kenny_test_dir}/subdir"
+  touch "${minnie_kenny_test_dir}/subdir/minnie-kenny.gitconfig"
+  run_test -i "/subdir/minnie-kenny.gitconfig"
+  [ "${status}" -eq 0 ]
+}
+
+@test "running without a minnie-kenny.gitconfig fails" {
+  rm "${minnie_kenny_test_dir}/minnie-kenny.gitconfig"
   run_test
   [ "${status}" -eq 1 ]
-  expected="Error: minnie-kenny.inc was not found next to the directory $(git rev-parse --absolute-git-dir)"
+  expected="Error: minnie-kenny.gitconfig was not found next to the directory $(git rev-parse --absolute-git-dir)"
   [ "${output}" = "${expected}" ]
 }
 
@@ -191,21 +207,21 @@ See https://github.com/awslabs/git-secrets#installing-git-secrets"
   [ "${output}" = "${expected}" ]
 }
 
-@test "committing secrets with an empty minnie-kenny.inc succeeds" {
+@test "committing secrets with an empty minnie-kenny.gitconfig succeeds" {
   run_test
   [ "${status}" -eq 0 ]
   temp_file="${minnie_kenny_test_dir}/file-with-secrets.txt"
   echo "This is my_super_secret content" >"${temp_file}"
   git add --force "${temp_file}"
-  run git commit --message="This should get rejected, but doesn't because the minnie-kenny.inc is not populated"
+  run git commit --message="This should get rejected, but doesn't because the minnie-kenny.gitconfig is not populated"
   [ "${status}" -eq 0 ]
 }
 
-@test "committing secrets with a non-empty minnie-kenny.inc fails" {
-  cat <<CONFIG >"${minnie_kenny_test_dir}/minnie-kenny.inc"
+@test "committing secrets with a non-empty minnie-kenny.gitconfig fails" {
+  cat <<GITCONFIG >"${minnie_kenny_test_dir}/minnie-kenny.gitconfig"
 [secrets]
 	patterns = my_super_secret
-CONFIG
+GITCONFIG
   run_test
   [ "${status}" -eq 0 ]
   temp_file="${minnie_kenny_test_dir}/file-with-secrets.txt"
