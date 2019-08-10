@@ -1,0 +1,16 @@
+language: bash
+matrix:
+  include:
+    - os: osx
+      env: MINNIE_KENNY_TEST_TYPE=standard
+    - os: windows
+      env: MINNIE_KENNY_TEST_TYPE=standard
+    - os: linux
+      env: MINNIE_KENNY_TEST_TYPE=standard
+    - os: linux
+      env: MINNIE_KENNY_TEST_TYPE=format
+    - os: linux
+      env: MINNIE_KENNY_TEST_TYPE=alpine
+    - os: linux
+      env: MINNIE_KENNY_TEST_TYPE=coverage
+script: test/minnie-kenny-test.sh
