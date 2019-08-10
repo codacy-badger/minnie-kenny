@@ -70,7 +70,8 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
           pushd /git/git-secrets && git checkout ad82d68 && make install && popd && \
           chmod a+rwx /usr/bin && \
           chmod a+rwx /usr/local/bin && \
-          adduser --disabled-password --gecos '' minnie-kenny\"]
+          groupadd --gid $(id -g ${USER}) minnie-kenny && \
+          useradd --uid $(id -u ${USER}) --gid $(id -g ${USER}) --no-log-init --no-create-home minnie-kenny\"]
       USER minnie-kenny:minnie-kenny
       ENV MINNIE_KENNY_DOCKER=true\
     " | docker build --tag broadinstitute/minnie-kenny-test-coverage -
