@@ -19,8 +19,8 @@ USAGE
   exit 1
 }
 
-echoout() { if [ ${minnie_kenny_quiet} -ne 1 ]; then echo "$@"; fi; }
-echoerr() { if [ ${minnie_kenny_quiet} -ne 1 ]; then echo "$@" 1>&2; fi; }
+echo_out() { if [ ${minnie_kenny_quiet} -ne 1 ]; then echo "$@"; fi; }
+echo_err() { if [ ${minnie_kenny_quiet} -ne 1 ]; then echo "$@" 1>&2; fi; }
 
 # process arguments
 while [ $# -gt 0 ]; do
@@ -47,23 +47,23 @@ while [ $# -gt 0 ]; do
       usage
       ;;
     *)
-      echoerr "Unknown argument: $1"
+      echo_err "Unknown argument: $1"
       usage
       ;;
   esac
 done
 
 if [ "${minnie_kenny_inc}" = "" ]; then
-  echoerr "Error: you need to provide an include file."
+  echo_err "Error: you need to provide an include file."
   usage
 fi
 
 if ! command -v git >/dev/null 2>&1; then
   if [ ${minnie_kenny_strict} -eq 0 ]; then
-    echoout "\`git\` not found. Not checking for git-secrets."
+    echo_out "\`git\` not found. Not checking for git-secrets."
     exit 0
   else
-    echoerr "Error: \`git\` not found."
+    echo_err "Error: \`git\` not found."
     exit 1
   fi
 fi
@@ -72,22 +72,22 @@ minnie_kenny_is_work_tree="$(git rev-parse --is-inside-work-tree 2>/dev/null || 
 
 if [ "${minnie_kenny_is_work_tree}" != "true" ]; then
   if [ ${minnie_kenny_strict} -eq 0 ]; then
-    echoout "Not a git working tree. Not checking for git-secrets."
+    echo_out "Not a git working tree. Not checking for git-secrets."
     exit 0
   else
-    echoerr "Error: Not a git working tree."
+    echo_err "Error: Not a git working tree."
     exit 1
   fi
 fi
 
 minnie_kenny_git_dir="$(git rev-parse --absolute-git-dir)"
 if [ ! -f "${minnie_kenny_git_dir}/../${minnie_kenny_inc}" ]; then
-  echoerr "Error: ${minnie_kenny_inc} was not found next to the directory ${minnie_kenny_git_dir}"
+  echo_err "Error: ${minnie_kenny_inc} was not found next to the directory ${minnie_kenny_git_dir}"
   exit 1
 fi
 
 if ! command -v git-secrets >/dev/null 2>&1; then
-  echoerr "\`git-secrets\` was not found while \`git\` was found." \
+  echo_err "\`git-secrets\` was not found while \`git\` was found." \
     "\`git-secrets\` must be installed first before using ${minnie_kenny_command_name}." \
     "See https://github.com/awslabs/git-secrets#installing-git-secrets"
   exit 1
@@ -114,7 +114,7 @@ check_and_install_hooks() {
   if [ ${actual} -eq 0 ]; then
     git secrets --install
   elif [ ${actual} -ne ${expected} ]; then
-    echoerr "Error: git-secrets is not installed into all of the expected .git hooks." \
+    echo_err "Error: git-secrets is not installed into all of the expected .git hooks." \
       "Double check the 'commit-msg' 'pre-commit' and 'prepare-commit-msg'" \
       "under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --install --force\`."
     exit 1

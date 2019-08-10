@@ -3,29 +3,27 @@
 
 set -euo pipefail
 
+minnie_kenny_bats_core_commit="c706d1470dd1376687776bbe985ac22d09780327"
+minnie_kenny_git_secrets_commit="ad82d68ee924906a0401dfd48de5057731a9bc84"
+
 case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
   standard)
     # Run standard tests on multiple platforms
-    case "${TRAVIS_OS_NAME:-}" in
-      osx)
-        brew install bats-core
-        ;;
-      windows)
-        git clone https://github.com/bats-core/bats-core.git
-        pushd bats-core
-        ./install.sh "${HOME}"
-        popd
-        export PATH="${PATH}:${HOME}/bin"
-        ;;
-      linux)
-        git clone https://github.com/bats-core/bats-core.git
-        pushd bats-core
-        ./install.sh "${HOME}"
-        popd
-        export PATH="${PATH}:${HOME}/bin"
-        ;;
-    esac
-    bats test/
+    if [[ "${TRAVIS:-}" == "true" ]]; then
+      set -x
+      git clone https://github.com/bats-core/bats-core.git
+      pushd bats-core
+      git checkout "${minnie_kenny_bats_core_commit}"
+      ./install.sh "${HOME}"
+      git clone https://github.com/awslabs/git-secrets.git
+      pushd git-secrets
+      git checkout "${minnie_kenny_git_secrets_commit}"
+      make DESTDIR="${HOME}" PREFIX="" install
+      popd
+      export PATH="${PATH}:${HOME}/bin"
+      set +x
+    fi
+    bats --tap test/
     ;;
   format)
     # Ensure files are formatted consistently
@@ -41,6 +39,7 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
       minnie_kenny_format_result=1
     fi
     if ! shfmt -f . | xargs shellcheck --check-sourced --external-sources; then
+      echo "Error: Check all files with \`shfmt -f . | xargs shellcheck --check-sourced --external-sources\`" 1>&2
       minnie_kenny_format_result=1
     fi
     exit "${minnie_kenny_format_result}"
@@ -55,44 +54,49 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
     ;;
   coverage)
     # Ensure all lines of minnie-kenny are covered
-    echo "\
-      FROM kcov/kcov:v36
-      ENTRYPOINT []
-      RUN [\"/bin/bash\", \"-c\", \"set -xuo pipefail && \
-          apt-get update && apt-get install -y git make && \
-          mkdir -p /git && \
-          git clone https://github.com/bats-core/bats-core.git /git/bats-core && \
-          pushd /git/bats-core && git checkout c706d14 && ./install.sh /usr/local && popd && \
-          git clone https://github.com/awslabs/git-secrets.git /git/git-secrets && \
-          pushd /git/git-secrets && git checkout ad82d68 && make install && popd && \
-          chmod a+rwx /usr/bin && \
-          chmod a+rwx /usr/local/bin && \
-          groupadd --gid $(id -g "${USER}") minnie-kenny && \
-          useradd --uid $(id -u "${USER}") --gid minnie-kenny --no-log-init --no-create-home minnie-kenny\"]
-      USER minnie-kenny:minnie-kenny
-      ENV MINNIE_KENNY_DOCKER=true
-    " | docker build --tag broadinstitute/minnie-kenny-test-coverage -
     minnie_kenny_main_dir="${PWD}"
     minnie_kenny_test_dir="${minnie_kenny_main_dir}/test"
     minnie_kenny_temp_dir="${minnie_kenny_test_dir}/tmp"
     minnie_kenny_kcov_out="${minnie_kenny_temp_dir}/kcov.out"
     minnie_kenny_bats_out="${minnie_kenny_temp_dir}/bats.out"
+    # kcov seems to send the stdout to... nowhere?
+    # Instead, run bats, tee those outputs to a file, and have kcov measure the outer script
+    minnie_kenny_bats_tee="${minnie_kenny_temp_dir}/bats-tee.sh"
     minnie_kenny_coverage_dir="${minnie_kenny_temp_dir}/coverage"
+    minnie_kenny_coverage_tag="broadinstitute/minnie-kenny-coverage:temp"
+    # Use the same $USER inside and outside the docker to keep files accessible while running as a non-root user
+    #   https://github.com/SimonKagstrom/kcov/issues/234#issuecomment-363013297
+    # Use useradd --no-log-init for https://github.com/moby/moby/issues/5419
+    echo "\
+      FROM kcov/kcov:v36
+      ENTRYPOINT []
+      RUN [\"/bin/bash\", \"-c\", \"set -xuo pipefail && \
+        apt-get update && apt-get install -y git make && \
+        mkdir -p /git && \
+        git clone https://github.com/bats-core/bats-core.git /git/bats-core && \
+        pushd /git/bats-core && git checkout '${minnie_kenny_bats_core_commit}' && ./install.sh /usr/local && popd && \
+        git clone https://github.com/awslabs/git-secrets.git /git/git-secrets && \
+        pushd /git/git-secrets && git checkout '${minnie_kenny_git_secrets_commit}' && make install && popd && \
+        chmod a+rwx /usr/bin && \
+        chmod a+rwx /usr/local/bin && \
+        groupadd --gid $(id -g "${USER}") '${USER}' && \
+        useradd --uid $(id -u "${USER}") --gid '${USER}' --no-log-init --no-create-home '${USER}'\"]
+      USER '${USER}':'${USER}'
+      ENV MINNIE_KENNY_DOCKER=true
+    " | docker build --tag "${minnie_kenny_coverage_tag}" -
     mkdir -p "${minnie_kenny_coverage_dir}"
     docker run \
       --tty --rm \
       --volume "${minnie_kenny_main_dir}:${minnie_kenny_main_dir}" \
       --workdir "${minnie_kenny_main_dir}" \
-      broadinstitute/minnie-kenny-test-coverage \
-      bash -c "
+      "${minnie_kenny_coverage_tag}" bash -c "
+        printf '#!/bin/sh\nbats \"\$@\" | tee \"${minnie_kenny_bats_out}\"' >\"${minnie_kenny_bats_tee}\" && \
+        chmod +x \"${minnie_kenny_bats_tee}\"
         kcov \
           \"--include-path=${minnie_kenny_main_dir}\" \
           \"--exclude-path=${minnie_kenny_test_dir}\" \
           \"${minnie_kenny_coverage_dir}\" \
-          \"${minnie_kenny_test_dir}/bats-tee.sh\" \
-          \"${minnie_kenny_bats_out}\" \
-          --pretty \
-          \"${minnie_kenny_test_dir}\" \
+          \"${minnie_kenny_bats_tee}\" --tap \"${minnie_kenny_test_dir}\" \
           2>\"${minnie_kenny_kcov_out}\"
         minnie_kenny_bats_exit_status=\$?
         if [[ \${minnie_kenny_bats_exit_status} -ne 0 ]]; then

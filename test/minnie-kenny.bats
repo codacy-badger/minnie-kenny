@@ -40,11 +40,23 @@ setup() {
 # Use this function if something doesn't work as expected.
 # Prints in the TAP format for bats https://github.com/bats-core/bats-core/tree/v1.1.0#printing-to-the-terminal
 # Example:
-#   echodbg "${output}"
+#   echo_dbg "${output}"
 # Alternative if the echo doesn't work as expected:
 #   printf '%s' "${output}" >"${minnie_kenny_test_dir}/bats.${BATS_TEST_NUMBER}.out"
-echodbg() {
-  echo '#' "$@" >&3
+echo_dbg() {
+  echo "$@" | sed 's/^/# /' >&3
+}
+
+# Call this right after run_test to print out the status and output
+run_dbg() {
+  echo_dbg "--status: ${status}--"
+  echo_dbg "${output}"
+}
+
+skip_test_if_not_docker() {
+  if [[ "${MINNIE_KENNY_DOCKER:-}" != "true" ]]; then
+    skip
+  fi
 }
 
 @test "print help" {
@@ -55,6 +67,7 @@ echodbg() {
 
 @test "running with no git-secrets hooks succeeds" {
   run_test
+  run_dbg
   [ "${status}" -eq 0 ]
   check_mark=$'\e[32m\xE2\x9C\x93\x1B\x28\x42\e[0m'
   expected="\
@@ -67,6 +80,7 @@ ${check_mark} Installed prepare-commit-msg hook to ${minnie_kenny_test_dir}/.git
 @test "running with all git-secrets hooks succeeds" {
   run_test
   run_test
+  run_dbg
   [ "${status}" -eq 0 ]
   [ "${output}" = "" ]
 }
@@ -75,6 +89,7 @@ ${check_mark} Installed prepare-commit-msg hook to ${minnie_kenny_test_dir}/.git
   run_test
   rm "${minnie_kenny_test_dir}/.git/hooks/pre-commit"
   run_test
+  run_dbg
   [ "${status}" -eq 1 ]
   minnie_kenny_git_dir="$(git rev-parse --absolute-git-dir)"
   expected="\
@@ -100,9 +115,6 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 }
 
 @test "running when the .git directory is not found succeeds" {
-  if [[ "${MINNIE_KENNY_DOCKER:-}" != "true" ]]; then
-    skip
-  fi
   rm -rf "${minnie_kenny_test_dir}/.git"
   run_test
   [ "${status}" -eq 0 ]
@@ -110,9 +122,6 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 }
 
 @test "running when the .git directory is not found and quiet succeeds" {
-  if [[ "${MINNIE_KENNY_DOCKER:-}" != "true" ]]; then
-    skip
-  fi
   rm -rf "${minnie_kenny_test_dir}/.git"
   run_test -q
   [ "${status}" -eq 0 ]
@@ -120,9 +129,6 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 }
 
 @test "running when the .git directory is not found and strict fails" {
-  if [[ "${MINNIE_KENNY_DOCKER:-}" != "true" ]]; then
-    skip
-  fi
   rm -rf "${minnie_kenny_test_dir}/.git"
   run_test -s
   [ "${status}" -eq 1 ]
@@ -130,9 +136,6 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 }
 
 @test "running when the .git directory is not found, strict, and quiet fails" {
-  if [[ "${MINNIE_KENNY_DOCKER:-}" != "true" ]]; then
-    skip
-  fi
   rm -rf "${minnie_kenny_test_dir}/.git"
   run_test -s -q
   [ "${status}" -eq 1 ]
@@ -158,6 +161,7 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 }
 
 @test "running when git is not installed succeeds" {
+  skip_test_if_not_docker
   git_path="$(which git)"
   mv "${git_path}" "${git_path}.bak"
   run_test
@@ -167,6 +171,7 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 }
 
 @test "running when git is not installed and strict fails" {
+  skip_test_if_not_docker
   git_path="$(which git)"
   mv "${git_path}" "${git_path}.bak"
   run_test -s
@@ -176,6 +181,7 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 }
 
 @test "running when git-secrets is not installed fails" {
+  skip_test_if_not_docker
   git_secrets_path="$(which git-secrets)"
   mv "${git_secrets_path}" "${git_secrets_path}.bak"
   run_test

@@ -1,11 +1,11 @@
 language: bash
 matrix:
   include:
+    - os: linux
+      env: MINNIE_KENNY_TEST_TYPE=standard
     - os: osx
       env: MINNIE_KENNY_TEST_TYPE=standard
     - os: windows
-      env: MINNIE_KENNY_TEST_TYPE=standard
-    - os: linux
       env: MINNIE_KENNY_TEST_TYPE=standard
     - os: linux
       env: MINNIE_KENNY_TEST_TYPE=format
