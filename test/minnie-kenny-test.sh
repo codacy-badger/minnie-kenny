@@ -19,17 +19,8 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
       git clone https://github.com/awslabs/git-secrets.git
       pushd git-secrets
       git checkout "${minnie_kenny_git_secrets_commit}"
-      case "${TRAVIS_OS_NAME}" in
-        windows)
-          # Workaround powershell execution policies by reading from stdin
-          cat install.ps1 | powershell -File -
-          # Don't know enough powershell to have the previous line install to ${HOME}/bin
-          #export PATH="${PATH}:${HOME}/.git-secrets"
-          ;;
-        *) make DESTDIR="${HOME}" PREFIX="" install ;;
-      esac
+      export PATH="${PATH}:${PWD}"
       popd
-      export PATH="${PATH}:${HOME}/bin"
       set +x
     fi
     bats --tap test/
