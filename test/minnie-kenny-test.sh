@@ -15,11 +15,14 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
         pushd bats-core
         ./install.sh "${HOME}"
         popd
+        export PATH="${PATH}:${HOME}/bin"
         ;;
       linux)
         git clone https://github.com/bats-core/bats-core.git
-        cd bats-core
-        ./install.sh /usr/local
+        pushd bats-core
+        ./install.sh "${HOME}"
+        popd
+        export PATH="${PATH}:${HOME}/bin"
         ;;
     esac
     bats test/
@@ -28,13 +31,13 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
     # Ensure files are formatted consistently
     minnie_kenny_format_result=0
     if ! curl --fail --silent --data-binary @codecov.yml https://codecov.io/validate >/dev/null; then
-      echo 'Error: Codecov yaml validation failed. Double check the file contents.' \
-        'https://docs.codecov.io/docs/codecov-yaml#section-validate-your-repository-yaml' 1>&2
+      echo "Error: Codecov yaml validation failed. Double check the file contents." \
+        "https://docs.codecov.io/docs/codecov-yaml#section-validate-your-repository-yaml" 1>&2
       minnie_kenny_format_result=1
     fi
     if ! shfmt -i 2 -ci -d .; then
-      echo 'Error: Files must be formatted with `shfmt -w -i 2 -ci .`' \
-        'to match https://google.github.io/styleguide/shell.xml' 1>&2
+      echo "Error: Files must be formatted with \`shfmt -w -i 2 -ci .\`" \
+        "to match https://google.github.io/styleguide/shell.xml" 1>&2
       minnie_kenny_format_result=1
     fi
     if ! shfmt -f . | xargs shellcheck --check-sourced --external-sources; then
@@ -87,8 +90,7 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
           \"${minnie_kenny_test_dir}/bats-tee.sh\" \
           \"${minnie_kenny_bats_out}\" \
           --pretty \
-          \"${minnie_kenny_test_dir}\" \
-          2>/dev/null
+          \"${minnie_kenny_test_dir}\"
         minnie_kenny_bats_exit_status=\$?
         cat \"${minnie_kenny_bats_out}\"
         exit \${minnie_kenny_bats_exit_status}
