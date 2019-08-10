@@ -55,6 +55,9 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
     ;;
   coverage)
     # Ensure all lines of minnie-kenny are covered
+    set -x
+    ls -al .
+    ls -al test
     echo "\
       FROM kcov/kcov:v36
       ENTRYPOINT []
