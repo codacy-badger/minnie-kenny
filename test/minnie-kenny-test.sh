@@ -20,7 +20,7 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
       pushd git-secrets
       git checkout "${minnie_kenny_git_secrets_commit}"
       case "${TRAVIS_OS_NAME}" in
-        windows) cat install.ps1 | powershell -File - ;;
+        windows) cat install.ps1 | powershell -File - -InstallationDirectory "${HOME}/bin" ;;
         *) make DESTDIR="${HOME}" PREFIX="" install ;;
       esac
       popd
