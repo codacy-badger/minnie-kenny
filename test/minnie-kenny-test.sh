@@ -16,6 +16,7 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
       git checkout "${minnie_kenny_bats_core_commit}"
       ./install.sh "${HOME}"
       git clone https://github.com/awslabs/git-secrets.git
+      popd
       pushd git-secrets
       git checkout "${minnie_kenny_git_secrets_commit}"
       make DESTDIR="${HOME}" PREFIX="" install
