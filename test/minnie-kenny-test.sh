@@ -24,7 +24,7 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
           # Workaround powershell execution policies by reading from stdin
           cat install.ps1 | powershell -File -
           # Don't know enough powershell to have the previous line install to ${HOME}/bin
-          export PATH="${PATH}:${HOME}/.git-secrets"
+          #export PATH="${PATH}:${HOME}/.git-secrets"
           ;;
         *) make DESTDIR="${HOME}" PREFIX="" install ;;
       esac
