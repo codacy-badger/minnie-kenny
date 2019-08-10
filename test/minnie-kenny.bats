@@ -68,7 +68,7 @@ skip_test_if_not_docker() {
 @test "running with no git-secrets hooks succeeds" {
   run_test
   [ "${status}" -eq 0 ]
-  check_mark=$'\e[32m\xE2\x9C\x93\x1B\x28\x42\e[0m'
+  check_mark="$(tput setaf 2)✓$(tput sgr 0)"
   expected="\
 ${check_mark} Installed commit-msg hook to ${minnie_kenny_test_dir}/.git/hooks/commit-msg
 ${check_mark} Installed pre-commit hook to ${minnie_kenny_test_dir}/.git/hooks/pre-commit
