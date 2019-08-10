@@ -55,9 +55,6 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
     ;;
   coverage)
     # Ensure all lines of minnie-kenny are covered
-    set -x
-    ls -al .
-    ls -al test
     echo "\
       FROM kcov/kcov:v36
       ENTRYPOINT []
@@ -70,14 +67,15 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
           pushd /git/git-secrets && git checkout ad82d68 && make install && popd && \
           chmod a+rwx /usr/bin && \
           chmod a+rwx /usr/local/bin && \
-          groupadd --gid $(id -g ${USER}) minnie-kenny && \
-          useradd --uid $(id -u ${USER}) --gid $(id -g ${USER}) --no-log-init --no-create-home minnie-kenny\"]
+          groupadd --gid $(id -g "${USER}") minnie-kenny && \
+          useradd --uid $(id -u "${USER}") --gid minnie-kenny --no-log-init --no-create-home minnie-kenny\"]
       USER minnie-kenny:minnie-kenny
-      ENV MINNIE_KENNY_DOCKER=true\
+      ENV MINNIE_KENNY_DOCKER=true
     " | docker build --tag broadinstitute/minnie-kenny-test-coverage -
     minnie_kenny_main_dir="${PWD}"
     minnie_kenny_test_dir="${minnie_kenny_main_dir}/test"
     minnie_kenny_temp_dir="${minnie_kenny_test_dir}/tmp"
+    minnie_kenny_kcov_out="${minnie_kenny_temp_dir}/kcov.out"
     minnie_kenny_bats_out="${minnie_kenny_temp_dir}/bats.out"
     minnie_kenny_coverage_dir="${minnie_kenny_temp_dir}/coverage"
     mkdir -p "${minnie_kenny_coverage_dir}"
@@ -94,8 +92,14 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
           \"${minnie_kenny_test_dir}/bats-tee.sh\" \
           \"${minnie_kenny_bats_out}\" \
           --pretty \
-          \"${minnie_kenny_test_dir}\"
+          \"${minnie_kenny_test_dir}\" \
+          2>\"${minnie_kenny_kcov_out}\"
         minnie_kenny_bats_exit_status=\$?
+        if [[ \${minnie_kenny_bats_exit_status} -ne 0 ]]; then
+          echo \"Contents of ${minnie_kenny_kcov_out}\"
+          cat \"${minnie_kenny_kcov_out}\"
+        fi
+        echo \"Contents of ${minnie_kenny_bats_out}\"
         cat \"${minnie_kenny_bats_out}\"
         exit \${minnie_kenny_bats_exit_status}
       "
