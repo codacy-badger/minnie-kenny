@@ -15,6 +15,7 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
       pushd bats-core
       git checkout "${minnie_kenny_bats_core_commit}"
       ./install.sh "${HOME}"
+      export PATH="${PATH}:${HOME}/bin"
       popd
       git clone https://github.com/awslabs/git-secrets.git
       pushd git-secrets
