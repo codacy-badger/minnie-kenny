@@ -6,9 +6,9 @@ set -euo pipefail
 minnie_kenny_bats_core_commit="c706d1470dd1376687776bbe985ac22d09780327"
 minnie_kenny_git_secrets_commit="ad82d68ee924906a0401dfd48de5057731a9bc84"
 
-case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
-  standard)
-    # Run standard tests on multiple platforms
+case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
+  bats)
+    # Run basic bats tests on multiple platforms
     if [[ "${TRAVIS:-}" == "true" ]]; then
       set -x
       git clone https://github.com/bats-core/bats-core.git
@@ -19,31 +19,34 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
       git clone https://github.com/awslabs/git-secrets.git
       pushd git-secrets
       git checkout "${minnie_kenny_git_secrets_commit}"
-      make DESTDIR="${HOME}" PREFIX="" install
+      case "${TRAVIS_OS_NAME}" in
+        windows) powershell -File install.ps1 ;;
+        *) make DESTDIR="${HOME}" PREFIX="" install ;;
+      esac
       popd
       export PATH="${PATH}:${HOME}/bin"
       set +x
     fi
     bats --tap test/
     ;;
-  format)
-    # Ensure files are formatted consistently
-    minnie_kenny_format_result=0
+  lint)
+    # Ensure files are consistent
+    minnie_kenny_lint_result=0
     if ! curl --fail --silent --data-binary @codecov.yml https://codecov.io/validate >/dev/null; then
       echo "Error: Codecov yaml validation failed. Double check the file contents." \
         "https://docs.codecov.io/docs/codecov-yaml#section-validate-your-repository-yaml" 1>&2
-      minnie_kenny_format_result=1
+      minnie_kenny_lint_result=1
     fi
     if ! shfmt -i 2 -ci -d .; then
-      echo "Error: Files must be formatted with \`shfmt -w -i 2 -ci .\`" \
+      echo "Error: Format files with \`shfmt -w -i 2 -ci .\`" \
         "to match https://google.github.io/styleguide/shell.xml" 1>&2
-      minnie_kenny_format_result=1
+      minnie_kenny_lint_result=1
     fi
     if ! shfmt -f . | xargs shellcheck --check-sourced --external-sources; then
-      echo "Error: Check all files with \`shfmt -f . | xargs shellcheck --check-sourced --external-sources\`" 1>&2
-      minnie_kenny_format_result=1
+      echo "Error: Fix everything reported by \`shfmt -f . | xargs shellcheck --check-sourced --external-sources\`" 1>&2
+      minnie_kenny_lint_result=1
     fi
-    exit "${minnie_kenny_format_result}"
+    exit "${minnie_kenny_lint_result}"
     ;;
   alpine)
     # Ensure minnie-kenny.sh executes without error on /bin/sh even if git-secrets requires /bin/bash
@@ -60,14 +63,15 @@ case "${MINNIE_KENNY_TEST_TYPE:-standard}" in
     minnie_kenny_temp_dir="${minnie_kenny_test_dir}/tmp"
     minnie_kenny_kcov_out="${minnie_kenny_temp_dir}/kcov.out"
     minnie_kenny_bats_out="${minnie_kenny_temp_dir}/bats.out"
-    # kcov seems to send the stdout to... nowhere?
-    # Instead, run bats, tee those outputs to a file, and have kcov measure the outer script
+    # Use `tee` as `kcov` seems to send the `bats` stdout to... nowhere? Haven't found a existing git issue yet.
     minnie_kenny_bats_tee="${minnie_kenny_temp_dir}/bats-tee.sh"
     minnie_kenny_coverage_dir="${minnie_kenny_temp_dir}/coverage"
     minnie_kenny_coverage_tag="broadinstitute/minnie-kenny-coverage:temp"
     # Use the same $USER inside and outside the docker to keep files accessible while running as a non-root user
+    #   https://github.com/bats-core/bats-core/issues/15
     #   https://github.com/SimonKagstrom/kcov/issues/234#issuecomment-363013297
-    # Use useradd --no-log-init for https://github.com/moby/moby/issues/5419
+    # Use useradd --no-log-init to keep Docker for Mac from filling up the disk
+    #   https://github.com/moby/moby/issues/5419
     echo "\
       FROM kcov/kcov:v36
       ENTRYPOINT []

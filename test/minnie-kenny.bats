@@ -7,6 +7,7 @@
 # Hints:
 # https://github.com/particleflux/kcov-bats-circleci-codeclimate/blob/5f14e0d/tests/hello.bats
 # https://github.com/bats-core/bats-core/issues/15
+# https://github.com/SimonKagstrom/kcov/issues/234#issuecomment-363013297
 run_test() {
   run bash "${BATS_TEST_DIRNAME}/../minnie-kenny.sh" "$@"
 }
@@ -41,16 +42,15 @@ setup() {
 # Prints in the TAP format for bats https://github.com/bats-core/bats-core/tree/v1.1.0#printing-to-the-terminal
 # Example:
 #   echo_dbg "${output}"
-# Alternative if the echo doesn't work as expected:
-#   printf '%s' "${output}" >"${minnie_kenny_test_dir}/bats.${BATS_TEST_NUMBER}.out"
 echo_dbg() {
   echo "$@" | sed 's/^/# /' >&3
 }
 
 # Call this right after run_test to print out the status and output
 run_dbg() {
-  echo_dbg "--status: ${status}--"
+  echo_dbg "Debug: output"
   echo_dbg "${output}"
+  echo_dbg "Debug: status ${status}"
 }
 
 skip_test_if_not_docker() {
@@ -67,7 +67,6 @@ skip_test_if_not_docker() {
 
 @test "running with no git-secrets hooks succeeds" {
   run_test
-  run_dbg
   [ "${status}" -eq 0 ]
   check_mark=$'\e[32m\xE2\x9C\x93\x1B\x28\x42\e[0m'
   expected="\
@@ -80,7 +79,6 @@ ${check_mark} Installed prepare-commit-msg hook to ${minnie_kenny_test_dir}/.git
 @test "running with all git-secrets hooks succeeds" {
   run_test
   run_test
-  run_dbg
   [ "${status}" -eq 0 ]
   [ "${output}" = "" ]
 }
@@ -89,7 +87,6 @@ ${check_mark} Installed prepare-commit-msg hook to ${minnie_kenny_test_dir}/.git
   run_test
   rm "${minnie_kenny_test_dir}/.git/hooks/pre-commit"
   run_test
-  run_dbg
   [ "${status}" -eq 1 ]
   minnie_kenny_git_dir="$(git rev-parse --absolute-git-dir)"
   expected="\
