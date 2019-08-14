@@ -121,13 +121,13 @@ check_and_install_hooks() {
   fi
 
   # Allow the minnie-kenny config in `git secrets --scan`
-  if ! git config --get-all secrets.allowed | grep -Fxq "^${minnie_kenny_gitconfig}:\\d+"; then
-    git config --add secrets.allowed "^${minnie_kenny_gitconfig}:\\d+"
+  if ! git config --get-all secrets.allowed | grep -Fxq "^${minnie_kenny_gitconfig}:\\d+:"; then
+    git config --add secrets.allowed "^${minnie_kenny_gitconfig}:\\d+:"
   fi
 
   # Allow minnie-kenny to appear in `git secrets --scan-history`
-  if ! git config --get-all secrets.allowed | grep -Fxq "^[0-9a-f]+:${minnie_kenny_gitconfig}:\\d+"; then
-    git config --add secrets.allowed "^[0-9a-f]+:${minnie_kenny_gitconfig}:\\d+"
+  if ! git config --get-all secrets.allowed | grep -Fxq "^[0-9a-f]+:${minnie_kenny_gitconfig}:\\d+:"; then
+    git config --add secrets.allowed "^[0-9a-f]+:${minnie_kenny_gitconfig}:\\d+:"
   fi
 
   if ! git config --get-all include.path | grep -Fxq "../${minnie_kenny_gitconfig}"; then
