@@ -120,7 +120,11 @@ check_and_install_hooks() {
     exit 1
   fi
 
-  if ! git config --get include.path | grep -q "^../${minnie_kenny_gitconfig}\$"; then
+  if ! git config --get-all secrets.allowed | grep -Fxq "^${minnie_kenny_gitconfig}:\\d+"; then
+    git config --add secrets.allowed "^${minnie_kenny_gitconfig}:\\d+"
+  fi
+
+  if ! git config --get-all include.path | grep -Fxq "../${minnie_kenny_gitconfig}"; then
     git config --add include.path "../${minnie_kenny_gitconfig}"
   fi
 }

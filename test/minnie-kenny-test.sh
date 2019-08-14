@@ -81,9 +81,8 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
         pushd /git/git-secrets && git checkout '${minnie_kenny_git_secrets_commit}' && make install && popd && \
         chmod a+rwx /usr/bin && \
         chmod a+rwx /usr/local/bin && \
-        groupadd --gid $(id -g "${USER}") '${USER}' && \
-        useradd --uid $(id -u "${USER}") --gid '${USER}' --no-log-init --no-create-home '${USER}'\"]
-      USER '${USER}':'${USER}'
+        useradd --uid $(id -u "${USER}") --no-log-init --no-create-home '${USER}'\"]
+      USER '${USER}'
       ENV MINNIE_KENNY_DOCKER=true
     " | docker build --tag "${minnie_kenny_coverage_tag}" -
     mkdir -p "${minnie_kenny_coverage_dir}"
