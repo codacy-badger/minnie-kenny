@@ -33,7 +33,7 @@ case "${minnie_kenny_test_type}" in
   lint)
     # Ensure files are consistent
     if [[ "${TRAVIS:-}" == "true" ]]; then
-      pip install mkdocs
+      pip install --user mkdocs
     fi
     minnie_kenny_lint_result=0
     if ! curl --fail --silent --data-binary @codecov.yml https://codecov.io/validate >/dev/null; then
