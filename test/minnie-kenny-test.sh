@@ -5,8 +5,11 @@ set -euo pipefail
 
 minnie_kenny_bats_core_commit="c706d1470dd1376687776bbe985ac22d09780327"
 minnie_kenny_git_secrets_commit="ad82d68ee924906a0401dfd48de5057731a9bc84"
+minnie_kenny_test_type="${1:-${MINNIE_KENNY_TEST_TYPE:-bats}}"
 
-case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
+case "${minnie_kenny_test_type}" in
+  clean) rm -rf test/tmp ;;
+
   bats)
     # Run basic bats tests on multiple platforms
     if [[ "${TRAVIS:-}" == "true" ]]; then
@@ -26,6 +29,7 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
     fi
     bats --tap test/
     ;;
+
   lint)
     # Ensure files are consistent
     minnie_kenny_lint_result=0
@@ -43,16 +47,30 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
       echo "Error: Fix everything reported by \`shfmt -f . | xargs shellcheck --check-sourced --external-sources\`" 1>&2
       minnie_kenny_lint_result=1
     fi
+    if ! mkdocs build --strict --quiet --site-dir test/tmp/site; then
+      echo "Error: Fix everything reported by \`mkdocs build --strict\`" 1>&2
+      minnie_kenny_lint_result=1
+    fi
     exit "${minnie_kenny_lint_result}"
     ;;
+
   alpine)
     # Ensure minnie-kenny.sh executes without error on /bin/sh even if git-secrets requires /bin/bash
     docker run \
       --rm \
       --volume "${PWD}/minnie-kenny.sh:/usr/local/bin/minnie-kenny.sh" \
       alpine \
-      sh -c "set -x && apk --update add git && mkdir /src && cd /src && touch minnie-kenny.gitconfig && minnie-kenny.sh"
+      sh -c "
+        set -ex
+        mkdir /src
+        cd /src
+        touch minnie-kenny.gitconfig
+        minnie-kenny.sh
+        apk --update add git
+        minnie-kenny.sh
+      "
     ;;
+
   coverage)
     # Ensure all lines of minnie-kenny are covered
     minnie_kenny_main_dir="${PWD}"
@@ -111,5 +129,10 @@ case "${MINNIE_KENNY_TEST_TYPE:-bats}" in
     if [[ "${TRAVIS:-}" == "true" ]]; then
       bash <(curl -s https://codecov.io/bash) -s "${minnie_kenny_coverage_dir}"
     fi
+    ;;
+
+  *)
+    echo "Unknown test mode '${minnie_kenny_test_type}'. Expected one of [ clean | bats | coverage | alpine | lint ]." 1>&2
+    exit 1
     ;;
 esac

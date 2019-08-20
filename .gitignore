@@ -2,5 +2,5 @@
 .DS_Store
 .idea/*
 *.iml
-**/*.pyc
 test/tmp
+site

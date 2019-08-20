@@ -1,0 +1,24 @@
+site_name: minnie-kenny.sh
+site_author: Red Team at Broad Institute
+site_url: https://github.com/broadinstitute/minnie-kenny/
+site_description: minnie-kenny.sh documentation
+
+repo_url: https://github.com/broadinstitute/minnie-kenny/
+
+theme: readthedocs
+
+extra_css:
+  - css/extra.css
+extra_javascript:
+  - js/extra.js
+
+copyright: Copyright &copy; 2019 <a href="https://broadinstitute.org">Broad Institute</a>
+
+nav:
+  - Introduction: index.md
+  - Install: Install.md
+  - Usage: Usage.md
+  - Tests: Tests.md
+  - Uninstall: Uninstall.md
+  - Known Issues: KnownIssues.md
+  - Acknowledgments: Acknowledgments.md

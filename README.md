@@ -5,8 +5,6 @@
 [![codecov](https://img.shields.io/codecov/c/github/broadinstitute/minnie-kenny)](https://codecov.io/gh/broadinstitute/minnie-kenny)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-green)](https://github.com/broadinstitute/minnie-kenny/blob/master/LICENSE.txt)
 
-`minnie-kenny.sh` is a POSIX shell script that will check the installation of git-secrets
+`minnie-kenny.sh` is a POSIX shell script that ensures `git secrets` is correctly installed and consistently configured.
 
-## TODO: docs
-
-## Installation
+Check out the [`minnie-kenny.sh` documentation here](https://minnie-kenny.readthedocs.io/).
