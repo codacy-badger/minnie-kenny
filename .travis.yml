@@ -8,9 +8,9 @@ matrix:
     - os: windows
       env: MINNIE_KENNY_TEST_TYPE=bats
     - os: linux
-      env: MINNIE_KENNY_TEST_TYPE=format
+      env: MINNIE_KENNY_TEST_TYPE=coverage
     - os: linux
       env: MINNIE_KENNY_TEST_TYPE=alpine
     - os: linux
-      env: MINNIE_KENNY_TEST_TYPE=coverage
+      env: MINNIE_KENNY_TEST_TYPE=lint
 script: test/minnie-kenny-test.sh

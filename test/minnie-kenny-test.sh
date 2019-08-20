@@ -32,6 +32,9 @@ case "${minnie_kenny_test_type}" in
 
   lint)
     # Ensure files are consistent
+    if [[ "${TRAVIS:-}" == "true" ]]; then
+      pip install mkdocs
+    fi
     minnie_kenny_lint_result=0
     if ! curl --fail --silent --data-binary @codecov.yml https://codecov.io/validate >/dev/null; then
       echo "Error: Codecov yaml validation failed. Double check the file contents." \
@@ -132,7 +135,8 @@ case "${minnie_kenny_test_type}" in
     ;;
 
   *)
-    echo "Unknown test mode '${minnie_kenny_test_type}'. Expected one of [ clean | bats | coverage | alpine | lint ]." 1>&2
+    echo "Unknown test mode '${minnie_kenny_test_type}'." \
+      "Expected one of [ clean | bats | coverage | alpine | lint ]." 1>&2
     exit 1
     ;;
 esac
