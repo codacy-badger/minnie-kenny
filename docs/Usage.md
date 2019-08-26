@@ -1,6 +1,6 @@
 ## Overview
 
-```
+```console
 Usage:
     minnie-kenny.sh
     -s | --strict               Require git-secrets to be setup or fail

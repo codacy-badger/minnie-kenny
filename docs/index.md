@@ -19,7 +19,10 @@ What `minnie-kenny.sh` does not do:
 - Does not install the `git secrets` executable, it must be installed once per system, like `git`
 - Does not require `bash` by itself, though the `git secrets` command does
 
-The script is [inspired by and based upon](Acknowledgments/) a number of individuals and open source projects.
+The script is [inspired by, based upon, and developed using](Acknowledgments/) a number of individuals, open source
+projects, and hosting providers.
+
+[Contributions](Contributing/) to `minnie-kenny.sh` are welcome and appreciated!
 
 ## Quick start
 
@@ -43,16 +46,3 @@ Example `minnie-kenny.gitconfig`:
 
 Additional secret configuration may be appended to the file. See the [full Install instructions](Install/) for more
 information.
-
-## Issues
-
-`minnie-kenny.sh` issues are tracked on the DSP Workbench JIRA under the [Batch
-Board](https://broadworkbench.atlassian.net/projects/BA/issues). You will likely need to sign up before being to view or
-create issues.
-
-[Known Issues](KnownIssues/) are listed in the documentation.
-
-## License
-
-`minnie-kenny.sh` is open sourced under the [BSD 3-Clause
-license](https://github.com/broadinstitute/minnie-kenny/blob/ks_first_draft/LICENSE.txt).

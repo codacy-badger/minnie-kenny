@@ -1,16 +1,8 @@
 ## `test/minnie-kenny-test.sh`
 
-The various tests ensure that any updates to `minnie-kenny.sh` continue working as expected.
+These various tests ensure that any updates to `minnie-kenny.sh` continue working as expected.
 
-Each test requires a different set of software, as some tests are run within containers.
-
-## clean
-
-Tests deposit temporary files under `test/tmp`. These can be removed via `clean`.
-
-```bash
-test/minnie-kenny-test.sh clean
-```
+Each test requires a different set of software be installed on the system running the tests.
 
 ## bats
 
@@ -26,7 +18,9 @@ This test requires that your system has installed:
 test/minnie-kenny-test.sh bats
 ```
 
-It skips tests that require modifications to the host system, which instead are checked during `coverage` tests.
+The full list of bats tests are stored in [GitHub under
+/test/minnie-kenny.bats](https://github.com/broadinstitute/minnie-kenny/tree/master/test/minnie-kenny.bats). However,
+this test skips tests that require modifications to the host system, which instead are checked during `coverage` tests.
 
 ## coverage
 
@@ -69,4 +63,18 @@ This test requires that your system has installed:
 
 ```bash
 test/minnie-kenny-test.sh lint
+```
+
+## clean
+
+Tests deposit temporary files under `test/tmp`. These can be removed via `clean`.
+
+```bash
+test/minnie-kenny-test.sh clean
+```
+
+You cannot mix `clean` with the other tests types. It must be run separately.
+
+```bash
+test/minnie-kenny-test.sh clean && test/minnie-kenny-test.sh bats
 ```

@@ -19,6 +19,6 @@ nav:
   - Install: Install.md
   - Usage: Usage.md
   - Tests: Tests.md
-  - Uninstall: Uninstall.md
-  - Known Issues: KnownIssues.md
+  - Contributing: Contributing.md
+  - Common Questions: CommonQuestions.md
   - Acknowledgments: Acknowledgments.md

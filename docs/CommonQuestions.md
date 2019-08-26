@@ -1,20 +1,21 @@
-## Unable prevent secrets from being pushed to hosted GitHub, GitLab, Bitbucket, etc.
+## Can I just configure GitHub, GitLab, Bitbucket, etc. to prevent secrets being allowed?
 
-`git` supports [server side pre-receive
+`git` as a command line program supports [server side pre-receive
 hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#_server_side_hooks). However, these hooks are only
 supported on self-hosted git repositories, usually under the "Enterprise" offerings.
 
-Instead `minnie-kenny.sh` can be used to setup a shareable `git secrets` configuration, reducing the chances that
-secrets will be pushed to your publicly hosted git repository.
+Instead `minnie-kenny.sh` can be used to setup a shareable `git secrets` configuration, significantly reducing the
+chance that secrets will be pushed to your publicly hosted git repository.
 
-## `git secrets` is not automatically installed
+## Can minnie-kenny install `git secrets` automatically?
 
-Like `git`, `git secrets` must be installed manually once per system.
+Not currently. Like `git`, `git secrets` must be installed manually once per system. Once the program is available on
+the `$PATH`, `minnie-kenny.sh` will ensure that the pre-commit hooks are configured correctly.
 
-Follow the [installation instructions in the `git secrets`
+To install `git secrets`, follow the [installation instructions in the `git secrets`
 readme](https://github.com/awslabs/git-secrets#installing-git-secrets).
 
-## False positives when `git secrets` runs on Busybox, Alpine, etc.
+## Even though I added `allowed` entries why am I getting false positives when `git secrets` runs on BusyBox / Alpine?
 
 [Alpine](https://alpinelinux.org/about/), the tiny linux distribution based on
 [BusyBox](https://busybox.net/about.html), includes a non-standard `grep` by default. This causes an issue where allowed
@@ -33,7 +34,7 @@ that](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html#tag_2
 
 On ubuntu we see that `bar` is successfully excluded via a multiline expression:
 
-```bash
+```console
 $ docker run --rm ubuntu sh -c \
   "printf 'foo\nbar\nbaz' | grep -Ev \"\$(printf 'line1\nbar')\""
 foo
@@ -43,7 +44,7 @@ $
 
 However on alpine and busybox the `bar` still ends up in the output:
 
-```bash
+```console
 $ docker run --rm busybox sh -c \
   "printf 'foo\nbar\nbaz' | grep -Ev \"\$(printf 'line1\nbar')\""
 foo
@@ -55,7 +56,7 @@ $
 A workaround is to install [GNU grep](https://pkgs.alpinelinux.org/packages?name=grep&branch=edge) before using
 `git secrets`:
 
-```bash
+```console
 fetch http://dl-cdn.alpinelinux.org/alpine/v3.10/main/x86_64/APKINDEX.tar.gz
 $ docker run --rm alpine sh -c \
   "apk update && apk add grep &&
@@ -74,3 +75,23 @@ $
 ```
 
 `git secrets` already requires `bash` to run, so adding GNU's grep shouldn't be much more of an addition.
+
+## How do I uninstall `minnie-kenny.sh` / `git secrets`?
+
+`minnie-kenny.sh` invokes `git secrets --install` to add the github hooks, and configures the `.git/config` to read from
+`minnie-kenny.gitconfg`. To remove the configurations that `minnnie-kenny.sh` has installed:
+
+To remove the `minnie-kenny.sh` setup per repository:
+
+- edit the `.git/config`:
+    - remove the `[secrets]` stanza
+    - remove the `[include]` for `minnie-kenny.sh`
+- remove any calls to `git secrets` in the hooks:
+    - `.git/hooks/commit-msg`
+    - `.git/hooks/pre-commit`
+    - `.git/hooks/prepare-commit-msg`
+
+To remove the `git-secrets` from your system:
+
+- the `git secrets` script, usually installed at `/usr/local/bin/git-secrets`
+- the `git secrets` man page, usually installed at `/usr/local/share/man/man1/git-secrets.1`

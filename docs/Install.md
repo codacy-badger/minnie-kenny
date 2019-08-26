@@ -59,7 +59,7 @@ Example languages, with links on how to run custom executables on some of their 
 - C / C++
     - [GNU Make](https://www.gnu.org/software/make/manual/html_node/Force-Targets.html#Force-Targets)
     - [B2](https://boostorg.github.io/build/manual/master/index.html#jam.language.rules.builtins.utility._shell__)
-- Java / Scala / Clojure
+- Clojure / Groovy / Java / Kotlin / Scala
     - [Gradle](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.Exec.html)
     - [Maven](https://www.mojohaus.org/exec-maven-plugin/)
     - [Mill](https://www.lihaoyi.com/mill/page/extending-mill.html#custom-targets--commands)
