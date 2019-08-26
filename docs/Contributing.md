@@ -1,8 +1,9 @@
 ## Issue tracking
 
-`minnie-kenny.sh` issues are tracked on the DSP Workbench JIRA under the [Batch
-Board](https://broadworkbench.atlassian.net/projects/BA/issues). You will likely need to sign up before being to view or
-create issues.
+`minnie-kenny.sh` issues are tracked on the [DSP
+Workbench](https://www.broadinstitute.org/data-sciences-platform/workbench) JIRA under [Batch
+Analysis](https://broadworkbench.atlassian.net/projects/BA/issues). You will need to sign up with a free account before
+being able to view or create issues.
 
 Several known issues are listed in the documentation under [Common Questions](../CommonQuestions/).
 
