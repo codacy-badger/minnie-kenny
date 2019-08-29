@@ -37,21 +37,27 @@ case "${minnie_kenny_test_type}" in
     fi
     minnie_kenny_lint_result=0
     if ! curl --fail --silent --data-binary @codecov.yml https://codecov.io/validate >/dev/null; then
-      echo "Error: Codecov yaml validation failed. Double check the file contents." \
-        "https://docs.codecov.io/docs/codecov-yaml#section-validate-your-repository-yaml" 1>&2
+      echo "Error: Codecov yaml validation failed. Double check the contents of codecov.yml" \
+        "and see https://docs.codecov.io/docs/codecov-yaml for more info." 1>&2
       minnie_kenny_lint_result=1
     fi
     if ! shfmt -i 2 -ci -d .; then
       echo "Error: Format files with \`shfmt -w -i 2 -ci .\`" \
-        "to match https://google.github.io/styleguide/shell.xml" 1>&2
+        "to match https://google.github.io/styleguide/shell.xml." 1>&2
       minnie_kenny_lint_result=1
     fi
     if ! shfmt -f . | xargs shellcheck --check-sourced --external-sources; then
-      echo "Error: Fix everything reported by \`shfmt -f . | xargs shellcheck --check-sourced --external-sources\`" 1>&2
+      echo "Error: Fix everything reported by" \
+        "\`shfmt -f . | xargs shellcheck --check-sourced --external-sources\`." 1>&2
+      minnie_kenny_lint_result=1
+    fi
+    if ! shellcheck --check-sourced --external-sources test/minnie-kenny.bats; then
+      echo "Error: Fix everything reported by" \
+        "\`shellcheck --check-sourced --external-sources test/minnie-kenny.bats\`." 1>&2
       minnie_kenny_lint_result=1
     fi
     if ! mkdocs build --strict --quiet --site-dir test/tmp/site; then
-      echo "Error: Fix everything reported by \`mkdocs build --strict\`" 1>&2
+      echo "Error: Fix everything reported by \`mkdocs build --strict\`." 1>&2
       minnie_kenny_lint_result=1
     fi
     exit "${minnie_kenny_lint_result}"
@@ -71,11 +77,12 @@ case "${minnie_kenny_test_type}" in
         minnie-kenny.sh
         apk --update add git
         minnie-kenny.sh
+        echo alpine tests passed!
       "
     ;;
 
   coverage)
-    # Ensure all lines of minnie-kenny are covered
+    # Ensure all lines of minnie-kenny.sh are covered
     minnie_kenny_main_dir="${PWD}"
     minnie_kenny_test_dir="${minnie_kenny_main_dir}/test"
     minnie_kenny_temp_dir="${minnie_kenny_test_dir}/tmp"

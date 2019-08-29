@@ -7,7 +7,7 @@ supported on self-hosted git repositories, usually under the "Enterprise" offeri
 Instead `minnie-kenny.sh` can be used to setup a shareable `git secrets` configuration, significantly reducing the
 chance that secrets will be pushed to your publicly hosted git repository.
 
-## Can minnie-kenny install `git secrets` automatically?
+## Can `minnie-kenny.sh` install `git secrets` automatically?
 
 Not currently. Like `git`, `git secrets` must be installed manually once per system. Once the program is available on
 the `$PATH`, `minnie-kenny.sh` will ensure that the pre-commit hooks are configured correctly.

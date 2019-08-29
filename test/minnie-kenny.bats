@@ -12,21 +12,12 @@ run_test() {
   run bash "${BATS_TEST_DIRNAME}/../minnie-kenny.sh" "$@"
 }
 
-minnie_kenny_test_dir=test/tmp/git_dir
-
-# The minnie kenny usage message.
-minnie_kenny_usage_trimmed="\
-Usage:
-    minnie-kenny.sh
-    -s | --strict               Require git-secrets to be setup or fail
-    -q | --quiet                Don't output any status messages
-    -i | --include=FILE         Path to the include for git-config (default: \"minnie-kenny.gitconfig\")"
-
-# The minnie kenny usage message with a leading newline.
-minnie_kenny_usage=$'\n'"${minnie_kenny_usage_trimmed}"
-
 # Reset the environment for a test
 setup() {
+  # The directory where to test the minnie-kenny.sh
+  minnie_kenny_test_dir=test/tmp/git_dir
+
+  # (Re-)Create a temporary git directory
   mkdir -p "${minnie_kenny_test_dir}"
   pushd "${minnie_kenny_test_dir}" || exit 1
   rm -rf .git minnie-kenny.gitconfig
@@ -36,6 +27,39 @@ setup() {
   touch minnie-kenny.gitconfig
   popd || exit 1
   export GIT_DIR="${minnie_kenny_test_dir}/.git"
+
+  # The absolute path to the git directory
+  minnie_kenny_git_dir="$(git rev-parse --absolute-git-dir)"
+
+  # The minnie kenny usage message without a leading newline
+  minnie_kenny_message_usage_trimmed="\
+Usage:
+    minnie-kenny.sh
+    -f | --force                Modify the git config to run git secrets
+    -n | --no-force             Do not modify the git config only verify installation
+    -s | --strict               Require git-secrets to be setup or fail
+    -q | --quiet                Do not output any status messages
+    -i | --include=FILE         Path to the include for git-config (default: \"minnie-kenny.gitconfig\")"
+
+  # The minnie kenny usage message with a leading newline
+  minnie_kenny_message_usage=$'\n'"${minnie_kenny_message_usage_trimmed}"
+
+  # The formatted check mark at the beginning of the install message
+  minnie_kenny_check_mark="$(tput setaf 2)✓$(tput sgr 0)"
+
+  # The minnie kenny installation message
+  minnie_kenny_message_installed="\
+${minnie_kenny_check_mark} Installed commit-msg hook to ${minnie_kenny_test_dir}/.git/hooks/commit-msg
+${minnie_kenny_check_mark} Installed pre-commit hook to ${minnie_kenny_test_dir}/.git/hooks/pre-commit
+${minnie_kenny_check_mark} Installed prepare-commit-msg hook to ${minnie_kenny_test_dir}/.git/hooks/prepare-commit-msg"
+
+  # The minnie kenny message when force would fix the error
+  minnie_kenny_message_force="\
+Error: git-secrets is not installed into the expected git hooks 'commit-msg' 'pre-commit' and 'prepare-commit-msg'.
+Error: The expression '^minnie-kenny.gitconfig:[0-9]+:' should be allowed by git secrets.
+Error: The expression '^[0-9a-f]+:minnie-kenny.gitconfig:[0-9]+:' should be allowed by git secrets.
+Error: The path '../minnie-kenny.gitconfig' should be an included path in the git config.
+Error: The above errors may be fixed by re-running minnie-kenny.sh with -f / --force."
 }
 
 # Use this function if something doesn't work as expected.
@@ -43,6 +67,7 @@ setup() {
 # Example:
 #   echo_dbg "${output}"
 echo_dbg() {
+  # shellcheck disable=SC2001
   echo "$@" | sed 's/^/# /' >&3
 }
 
@@ -62,37 +87,37 @@ skip_test_if_not_docker() {
 @test "print help" {
   run_test --help
   [ "${status}" -eq 1 ]
-  [ "${output}" = "${minnie_kenny_usage_trimmed}" ]
+  [ "${output}" = "${minnie_kenny_message_usage_trimmed}" ]
 }
 
-@test "running with no git-secrets hooks succeeds" {
+@test "running with no git-secrets hooks fails" {
   run_test
+  [ "${status}" -eq 1 ]
+  [ "${output}" = "${minnie_kenny_message_force}" ]
+}
+
+@test "running with no git-secrets hooks and force succeeds" {
+  run_test -f
   [ "${status}" -eq 0 ]
-  check_mark="$(tput setaf 2)✓$(tput sgr 0)"
-  expected="\
-${check_mark} Installed commit-msg hook to ${minnie_kenny_test_dir}/.git/hooks/commit-msg
-${check_mark} Installed pre-commit hook to ${minnie_kenny_test_dir}/.git/hooks/pre-commit
-${check_mark} Installed prepare-commit-msg hook to ${minnie_kenny_test_dir}/.git/hooks/prepare-commit-msg"
-  [ "${output}" = "${expected}" ]
+  [ "${output}" = "${minnie_kenny_message_installed}" ]
 }
 
 @test "running with all git-secrets hooks succeeds" {
-  run_test
+  run_test -f
   run_test
   [ "${status}" -eq 0 ]
   [ "${output}" = "" ]
 }
 
 @test "running with some git-secrets hooks fails" {
-  run_test
+  run_test -f
   rm "${minnie_kenny_test_dir}/.git/hooks/pre-commit"
   run_test
   [ "${status}" -eq 1 ]
-  minnie_kenny_git_dir="$(git rev-parse --absolute-git-dir)"
   expected="\
-Error: git-secrets is not installed into all of the expected .git hooks. \
-Double check the 'commit-msg' 'pre-commit' and 'prepare-commit-msg' \
-under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --install --force\`."
+Error: git-secrets is not installed into all of the expected git hooks. \
+Double check the 'commit-msg' 'pre-commit' and 'prepare-commit-msg' under the directory \
+${minnie_kenny_git_dir}/hooks and consider running \`git secrets --install --force\`."
   [ "${output}" = "${expected}" ]
 }
 
@@ -100,7 +125,7 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
   rm "${minnie_kenny_test_dir}/minnie-kenny.gitconfig"
   mkdir -p "${minnie_kenny_test_dir}/subdir"
   touch "${minnie_kenny_test_dir}/subdir/minnie-kenny.gitconfig"
-  run_test -i "subdir/minnie-kenny.gitconfig"
+  run_test -f -i "subdir/minnie-kenny.gitconfig"
   [ "${status}" -eq 0 ]
 }
 
@@ -108,7 +133,7 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
   rm "${minnie_kenny_test_dir}/minnie-kenny.gitconfig"
   mkdir -p "${minnie_kenny_test_dir}/subdir"
   touch "${minnie_kenny_test_dir}/subdir/minnie-kenny.gitconfig"
-  run_test -i "/subdir/minnie-kenny.gitconfig"
+  run_test -f -i "/subdir/minnie-kenny.gitconfig"
   [ "${status}" -eq 0 ]
 }
 
@@ -116,14 +141,14 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
   rm "${minnie_kenny_test_dir}/minnie-kenny.gitconfig"
   run_test
   [ "${status}" -eq 1 ]
-  expected="Error: minnie-kenny.gitconfig was not found next to the directory $(git rev-parse --absolute-git-dir)"
+  expected="Error: minnie-kenny.gitconfig was not found next to the directory ${minnie_kenny_git_dir}"
   [ "${output}" = "${expected}" ]
 }
 
 @test "running with a made up include fails" {
   run_test -i "made-up"
   [ "${status}" -eq 1 ]
-  expected="Error: made-up was not found next to the directory $(git rev-parse --absolute-git-dir)"
+  expected="Error: made-up was not found next to the directory ${minnie_kenny_git_dir}"
   [ "${output}" = "${expected}" ]
 }
 
@@ -155,27 +180,39 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
   [ "${output}" = "" ]
 }
 
+@test "running with no force then force succeeds" {
+  run_test -n -f
+  [ "${status}" -eq 0 ]
+  [ "${output}" = "${minnie_kenny_message_installed}" ]
+}
+
+@test "running with force then no force fails" {
+  run_test -f -n
+  [ "${status}" -eq 1 ]
+  [ "${output}" = "${minnie_kenny_message_force}" ]
+}
+
 @test "running without an argument for -i fails" {
   run_test -i
   [ "${status}" -eq 1 ]
-  [ "${output}" = "Error: you need to provide an include file.${minnie_kenny_usage}" ]
+  [ "${output}" = "Error: you need to provide an include file.${minnie_kenny_message_usage}" ]
 }
 
 @test "running without an argument for --include= fails" {
   run_test --include=
   [ "${status}" -eq 1 ]
-  [ "${output}" = "Error: you need to provide an include file.${minnie_kenny_usage}" ]
+  [ "${output}" = "Error: you need to provide an include file.${minnie_kenny_message_usage}" ]
 }
 
 @test "running with an invalid argument fails" {
   run_test --foo
   [ "${status}" -eq 1 ]
-  [ "${output}" = "Unknown argument: --foo${minnie_kenny_usage}" ]
+  [ "${output}" = "Unknown argument: --foo${minnie_kenny_message_usage}" ]
 }
 
 @test "running when git is not installed succeeds" {
   skip_test_if_not_docker
-  git_path="$(which git)"
+  git_path="$(command -v git)"
   mv "${git_path}" "${git_path}.bak"
   run_test
   mv "${git_path}.bak" "${git_path}"
@@ -185,7 +222,7 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 
 @test "running when git is not installed and strict fails" {
   skip_test_if_not_docker
-  git_path="$(which git)"
+  git_path="$(command -v git)"
   mv "${git_path}" "${git_path}.bak"
   run_test -s
   mv "${git_path}.bak" "${git_path}"
@@ -195,9 +232,9 @@ under your ${minnie_kenny_git_dir}/hooks and consider running \`git secrets --in
 
 @test "running when git-secrets is not installed fails" {
   skip_test_if_not_docker
-  git_secrets_path="$(which git-secrets)"
+  git_secrets_path="$(command -v git-secrets)"
   mv "${git_secrets_path}" "${git_secrets_path}.bak"
-  run_test
+  run_test -f
   mv "${git_secrets_path}.bak" "${git_secrets_path}"
   expected="\
 \`git-secrets\` was not found while \`git\` was found. \
@@ -208,7 +245,7 @@ See https://github.com/awslabs/git-secrets#installing-git-secrets"
 }
 
 @test "committing secrets with an empty minnie-kenny.gitconfig succeeds" {
-  run_test
+  run_test -f
   [ "${status}" -eq 0 ]
   temp_file="${minnie_kenny_test_dir}/file-with-secrets.txt"
   echo "This is my_super_secret content" >"${temp_file}"
@@ -222,7 +259,7 @@ See https://github.com/awslabs/git-secrets#installing-git-secrets"
 [secrets]
 	patterns = my_super_secret
 GITCONFIG
-  run_test
+  run_test -f
   [ "${status}" -eq 0 ]
   temp_file="${minnie_kenny_test_dir}/file-with-secrets.txt"
   echo "This is my_super_secret content" >"${temp_file}"
