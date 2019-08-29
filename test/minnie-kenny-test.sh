@@ -33,7 +33,12 @@ case "${minnie_kenny_test_type}" in
   lint)
     # Ensure files are consistent
     if [[ "${TRAVIS:-}" == "true" ]]; then
+      set -x
       pip install --user mkdocs
+      # Update here to shellcheck v0.7.0 until travis updates their built in shellcheck version
+      curl --location "https://storage.googleapis.com/shellcheck/shellcheck-v0.7.0.linux.x86_64.tar.xz" | tar -xJv
+      export PATH="${PWD}/shellcheck-v0.7.0:${PATH}"
+      set +x
     fi
     minnie_kenny_lint_result=0
     if ! curl --fail --silent --data-binary @codecov.yml https://codecov.io/validate >/dev/null; then
