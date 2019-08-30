@@ -65,12 +65,14 @@ Example languages, with links on how to run custom executables on some of their 
     - [Mill](https://www.lihaoyi.com/mill/page/extending-mill.html#custom-targets--commands)
     - [Leiningen](https://github.com/hyPiRion/lein-shell#readme)
     - [sbt](https://www.scala-sbt.org/1.x/docs/Process.html)
-- ECMAScript / JavaScript
+- ECMAScript / JavaScript / TypeScript
+    - [Node.js](https://nodejs.org/api/child_process.html#child_process_child_process_spawnsync_command_args_options)
     - [npm](https://docs.npmjs.com/misc/scripts#examples)
 - Python
     - [Conda](https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html?highlight=test#test-commands)
     - [Distutils](https://docs.python.org/3/distutils/extending.html)
     - [Setuptools](https://setuptools.readthedocs.io/en/latest/setuptools.html#adding-commands)
+    - [tox](https://tox.readthedocs.io/en/latest/#basic-example)
 - Ruby
     - [Rake](https://ruby.github.io/rake/FileUtils.html#method-i-sh)
 
